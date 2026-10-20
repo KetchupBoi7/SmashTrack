@@ -1,0 +1,17 @@
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Secrets and local settings (this site has none; kept out in case it grows)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Tooling output
+node_modules/
+*.log

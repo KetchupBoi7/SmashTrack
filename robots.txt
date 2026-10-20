@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ketchupboi7.github.io/SmashTrack/sitemap.xml

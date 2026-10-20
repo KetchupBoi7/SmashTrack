@@ -3,9 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SmashTrack</title>
-<meta name="description" content="ASHS SmashTrack runs badminton, table tennis and squash sessions from one screen.">
+<title>SmashTrack: Badminton, Table Tennis and Squash Session Manager</title>
+<meta name="description" content="Run badminton, table tennis and squash sessions from one screen. Fills the courts, runs the clock, records results and keeps standings. Free, and works offline.">
+<link rel="canonical" href="https://ketchupboi7.github.io/SmashTrack/">
+<!-- Everything is inline or built in, and the app never talks to a server, so the
+     policy shuts off every outside connection, script, frame and form. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' blob: data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0d1117">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SmashTrack">
+<meta property="og:title" content="SmashTrack: run badminton, table tennis and squash sessions">
+<meta property="og:description" content="Type in who turned up and SmashTrack fills the courts, runs the match clock and keeps the standings. Free, and works offline.">
+<meta property="og:url" content="https://ketchupboi7.github.io/SmashTrack/">
+<meta property="og:image" content="https://ketchupboi7.github.io/SmashTrack/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SmashTrack: Tournament Coordinator">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SmashTrack: run badminton, table tennis and squash sessions">
+<meta name="twitter:description" content="Fills the courts, runs the match clock and keeps the standings. Free, and works offline.">
+<meta name="twitter:image" content="https://ketchupboi7.github.io/SmashTrack/og-image.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<noscript><style>#st-splash{display:none}</style></noscript>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SmashTrack">
@@ -31,12 +53,12 @@
   var l = document.createElement('link');
   l.rel = 'manifest'; l.href = './manifest.webmanifest';
   document.head.appendChild(l);
-  var t = document.createElement('link');
-  t.rel = 'apple-touch-icon'; t.href = './icon-192.png';
-  document.head.appendChild(t);
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./sw.js').catch(function(){});
+      navigator.serviceWorker.register('./sw.js').catch(function(e){
+        // The site still works without it; only offline use is lost.
+        console.warn('SmashTrack: offline mode could not start.', e && e.message);
+      });
     });
   }
 })();
@@ -46,7 +68,7 @@
 :root{
   --bg:#0d1117;--sf:#151c24;--sf2:#1b2530;--sf3:#222e3a;--ln:#2c3a47;
   --ink:#eaf2ee;--mt:#aebbc4;--mt2:#98a6b0;
-  --ac:#4A0D67;--ac2:#3a0a52;--acl:#b388d9;--tl:#00A9CC;--rd:#ff6f61;--am:#ffc24b;
+  --ac:#4A0D67;--ac2:#3a0a52;--acl:#b388d9;--tl:#00A9CC;--tlt:#4cd0ec;--rd:#ff6f61;--am:#ffc24b;
   --sh:0 10px 30px rgba(0,0,0,.35);
   --dp:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
   --ui:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -67,10 +89,15 @@
 @media (pointer:coarse){:root{--tt0:44px}}
 html[data-theme=light]{
   --bg:#f0f2f5;--sf:#ffffff;--sf2:#e9ebef;--sf3:#dde0e5;--ln:#cdd2d9;
-  --ink:#0d1117;--mt:#48525f;--mt2:#5f6a76;--sh:0 8px 24px rgba(15,20,30,.1);
+  --ink:#0d1117;--mt:#48525f;--mt2:#566170;--sh:0 8px 24px rgba(15,20,30,.1);
+  /* The teal, red and amber used for text are darkened here so they keep 4.5:1
+     contrast on light surfaces. */
+  --tl:#006a80;--tlt:#00576b;--rd:#b3261e;--am:#8a5a00;
   --hero:#0d1117;
   color-scheme:light;
 }
+/* Dark text sits on the pale colours; on the darker light-theme colours it flips to white. */
+html[data-theme=light] .rgrid .btn.on,html[data-theme=light] .pn.pick,html[data-theme=light] .subon .pn.pick:hover,html[data-theme=light] .unp span,html[data-theme=light] .saveerr,html[data-theme=light] .dlg .ok{color:#fff}
 
 /* ---------- base ---------- */
 html,body{margin:0;padding:0}
@@ -95,6 +122,10 @@ input:focus,select:focus{border-color:var(--tl);outline:none;box-shadow:0 0 0 3p
 @media (pointer:coarse){input,select,textarea{font-size:16px !important}}
 :focus-visible{outline:2px solid var(--tl);outline-offset:2px}
 [hidden]{display:none !important}
+.skip{position:fixed;top:8px;left:8px;z-index:100000;transform:translateY(-200%);background:var(--ac);color:#fff;font-weight:600;font-size:14px;padding:10px 16px;border-radius:var(--r1)}
+.skip:focus{transform:none}
+html.lock .skip{display:none}
+main:focus{outline:none}
 .vis-hide{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0;margin:-1px}
 
 @keyframes vIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -427,8 +458,13 @@ select.fld{cursor:pointer}
 .sbs .sd{font-family:var(--dp);font-weight:800;font-size:max(40px,min(84cqh,calc(113.5cqh - 132px),calc(176cqw / var(--n,2))));line-height:.78;font-variant-numeric:tabular-nums;letter-spacing:-.03em;pointer-events:none;padding-top:.04em}
 .sbs.a .sd{color:var(--acl)}
 .sbs.b .sd{color:var(--tl)}
-.sbs .un{position:absolute;bottom:clamp(10px,3.5cqh,22px);left:0;right:0;margin:0 auto;width:max-content;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.28);color:rgba(255,255,255,.75);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:8px 16px;cursor:pointer;min-height:var(--tt)}
-.sbs .un:hover{background:rgba(0,0,0,.5);color:#fff}
+.sbs .un{position:absolute;z-index:2;bottom:clamp(10px,3.5cqh,22px);left:0;right:0;margin:0 auto;width:max-content;border:1px solid var(--ln);background:var(--sf2);color:var(--ink);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:8px 16px;cursor:pointer;min-height:var(--tt)}
+.sbs .un:hover{background:var(--sf3);border-color:var(--mt2)}
+/* The whole side is one real button laid over it, so Undo is not nested inside
+   another control. */
+.sbs .sbp{position:absolute;inset:0;z-index:1;width:100%;height:100%;padding:0;border:0;border-radius:0;background:none;cursor:pointer;outline-offset:-3px}
+.sbs .sbp:active{transform:none}
+@media (hover:hover){.sbs .sbp:hover{box-shadow:none}}
 .sbvs{display:flex;align-items:center;justify-content:center;background:var(--sf2);border-left:1px solid var(--ln);border-right:1px solid var(--ln)}
 .sbvs span{font-family:var(--dp);font-weight:800;font-size:clamp(12px,2cqw,16px);text-transform:uppercase;color:var(--mt2);letter-spacing:.08em;writing-mode:vertical-rl}
 /* Phones stand upright, so the two sides stack and each gets the full width. */
@@ -470,7 +506,7 @@ select.fld{cursor:pointer}
 .hsd .hn{font-weight:600;font-size:15px;line-height:1.25;word-break:break-word}
 .hsd.l .hn{color:var(--mt)}
 .rp{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px}
-.rp.w{color:var(--tl);background:color-mix(in srgb,var(--tl) 16%,transparent);border:1px solid color-mix(in srgb,var(--tl) 40%,transparent)}
+.rp.w{color:var(--tlt);background:color-mix(in srgb,var(--tl) 16%,transparent);border:1px solid color-mix(in srgb,var(--tl) 40%,transparent)}
 .rp.l{color:var(--mt2);background:var(--sf3);border:1px solid var(--ln)}
 .hvs{display:flex;align-items:center;justify-content:center;padding:0 4px;font-family:var(--dp);font-weight:800;font-size:12px;letter-spacing:.08em;color:var(--mt2);background:repeating-linear-gradient(var(--ln),var(--ln) 4px,transparent 4px,transparent 9px) center/1px 100% no-repeat}
 .hvs span{background:var(--sf2);padding:4px 0}
@@ -580,7 +616,7 @@ select.fld{cursor:pointer}
 .hsteps{width:100%;max-width:920px}
 .hstep{position:relative;background:color-mix(in srgb,var(--sf) 74%,transparent);border:1px solid color-mix(in srgb,var(--ink) 9%,transparent);border-radius:18px;padding:clamp(16px,1.9vw,20px);display:flex;flex-direction:column;align-items:flex-start;gap:9px;text-align:left}
 .hstep .n{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--acl) 14%,transparent);border:1px solid color-mix(in srgb,var(--acl) 32%,transparent);box-shadow:0 0 14px 0 color-mix(in srgb,var(--acl) 26%,transparent);color:var(--acl);font-family:var(--dp);font-weight:800;font-size:12px;line-height:1}
-.hstep h3{margin:0;font-family:var(--dp);font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:15px;line-height:1.15}
+.hstep h2{margin:0;font-family:var(--dp);font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:15px;line-height:1.15}
 .hstep p{margin:0;font-size:13px;color:var(--mt);line-height:1.5;text-wrap:pretty}
 .hfoot{width:100%;max-width:840px;display:flex;flex-direction:column;align-items:center;gap:5px;padding-top:clamp(13px,1.7vw,17px);border-top:1px solid color-mix(in srgb,var(--ink) 7%,transparent);opacity:.72}
 .hfoot span{font-size:12px;color:var(--mt2);line-height:1.5;text-align:center;text-wrap:balance}
@@ -601,18 +637,44 @@ select.fld{cursor:pointer}
 </style>
 </head>
 <body>
+<a class="skip" href="#st-main">Skip to content</a>
 <div id="st-splash" aria-hidden="true"><div><div class="w">SMASH<span>TRACK</span></div><div class="s">Tournament Coordinator</div></div><div class="l"><i></i><span>Loading</span></div></div>
 <div id="st-app">
   <div id="st-top" class="top"></div>
-  <main id="st-main"></main>
+  <main id="st-main" tabindex="-1"></main>
   <nav id="st-pnav" class="pnav" aria-label="Sections" hidden></nav>
 </div>
 <div id="st-home"></div>
 <div id="st-dlg"></div>
 <div id="st-buzz"></div>
 <div id="st-toasts" role="status" aria-live="polite" aria-atomic="false"></div>
-<input type="file" id="st-file" accept="application/json,.json" class="vis-hide" tabindex="-1" aria-hidden="true">
-<noscript><p style="padding:24px;font-family:system-ui,sans-serif;color:#eaf2ee">SmashTrack needs JavaScript switched on in this browser.</p></noscript>
+<input type="file" id="st-file" accept="application/json,.json" class="vis-hide" tabindex="-1" aria-hidden="true" aria-label="Open a season file">
+<noscript><div style="max-width:560px;margin:0 auto;padding:48px 24px;font-family:system-ui,sans-serif;color:#eaf2ee;line-height:1.5"><h1 style="font-size:28px;margin:0 0 12px">SmashTrack</h1><p>SmashTrack runs badminton, table tennis and squash sessions: it fills the courts, runs the match clock, records results and keeps the standings.</p><p>It needs JavaScript, and JavaScript is switched off in this browser. Turn it on for this site and reload the page.</p></div></noscript>
+<script>
+/* If the app cannot start, say so instead of leaving the loading screen up
+   forever. Nothing saved in the browser is touched. */
+(function(){
+  function fail(e){
+    // The ResizeObserver notice is a harmless browser message, not a failure.
+    var msg = String((e && (e.message || (e.reason && e.reason.message))) || '');
+    if(/ResizeObserver/.test(msg)) return;
+    var sp = document.getElementById('st-splash');
+    if(!sp || sp.getAttribute('data-failed') || sp.getAttribute('data-up')) return;
+    sp.setAttribute('data-failed', '1');
+    sp.removeAttribute('aria-hidden');
+    sp.setAttribute('role', 'alert');
+    sp.innerHTML = '<div style="max-width:440px;padding:24px;text-align:center;font-family:system-ui,sans-serif;color:#eaf2ee;line-height:1.5">'
+      + '<div style="font-size:30px;font-weight:800;letter-spacing:.02em;margin-bottom:12px">SMASH<span style="color:#b388d9">TRACK</span></div>'
+      + '<p style="margin:0 0 8px">SmashTrack could not start.</p>'
+      + '<p style="margin:0 0 20px;color:#aebbc4;font-size:14px">Reload the page. Your saved session has not been touched. If it keeps happening, try the latest Chrome, Edge, Safari or Firefox.</p>'
+      + '<button type="button" id="st-reload" style="font:inherit;font-weight:600;padding:12px 22px;border:0;border-radius:8px;background:#4A0D67;color:#fff;cursor:pointer">Reload</button></div>';
+    var b = document.getElementById('st-reload');
+    if(b) b.addEventListener('click', function(){ location.reload(); });
+  }
+  window.addEventListener('error', fail);
+  window.addEventListener('unhandledrejection', fail);
+})();
+</script>
 <script>
 'use strict';
 /* =====================================================================
@@ -1634,8 +1696,8 @@ function vTop(ui){
   const pop = U.welcome ? '' : vSettings();
   const home = '<button type="button" class="brand" data-c="home" title="Home screen" aria-label="SmashTrack home screen">';
   if(U.w < 620){
-    return err + '<div class="ptop">' + home + brand(false) + '</button>'
-      + '<div class="hright">' + (U.w >= 380 ? inPill() : '') + gearBtn(true) + '</div>' + pop + '</div>';
+    return err + '<header class="ptop">' + home + brand(false) + '</button>'
+      + '<div class="hright">' + (U.w >= 380 ? inPill() : '') + gearBtn(true) + '</div>' + pop + '</header>';
   }
   return err + '<header class="hdr"' + (ui.zoom ? ' style="zoom:' + ui.zoom + '"' : '') + '>'
     + home + brand(U.w >= 1040) + '</button>'
@@ -2006,7 +2068,8 @@ function vSeason(){
 // room the side has: wide halves on a laptop, stacked halves on a phone.
 function vScore(){
   const sb = D.sb, fs = U.fs;
-  const side = (k, name, val) => '<div class="sbs ' + k + '" data-c="sbPt" data-a="' + k + '" role="button" tabindex="0" aria-label="Point to ' + esc(name) + '">'
+  const side = (k, name, val) => '<div class="sbs ' + k + '">'
+    + '<button type="button" class="sbp" data-c="sbPt" data-a="' + k + '" aria-label="Point to ' + esc(name) + ', score ' + val + '"></button>'
     + '<div class="sn">' + esc(name) + '</div><div class="sd" style="--n:' + Math.max(2, String(val).length) + '">' + val + '</div>'
     + '<button type="button" class="un" data-c="sbUndo" data-a="' + k + '" aria-label="Undo a point for ' + esc(name) + '">Undo</button></div>';
   return (fs ? '' : '<div class="vh"><h1>Scoreboard</h1><p>Tap a side to add a point. Press F for fullscreen, Escape to leave it.</p></div>')
@@ -2125,7 +2188,7 @@ function vAbout(){
       return '<div class="kr' + (on ? ' on' : '') + '"><span>' + what + '</span><button type="button" data-c="listen" data-a="' + id + '" title="Click, then press a key" aria-label="' + what + ': ' + (on ? 'press a key' : keyLabel(b[id])) + '">'
         + (on ? 'Press a key' : keyLabel(b[id])) + '</button></div>';
     }).join('') + '</div></div></div></div>'
-    + '<div class="card"><div class="ch"><h2>Saving and your data</h2><span class="eb">No accounts, no server</span></div>'
+    + '<div class="card"><div class="ch"><h2>Saving and your data</h2><a class="btn s cpt" href="privacy.html">Privacy and terms</a></div>'
     + '<div class="cb"><div class="bal g8" data-bal="220|3,1">' + DATA_NOTES.map(n => '<div class="dn"><h3>' + n[0] + '</h3><p>' + n[1] + '</p></div>').join('') + '</div></div></div>';
 }
 
@@ -2146,7 +2209,7 @@ function vHome(ui){
     + '<h1>Run badminton, table tennis and squash sessions from one screen</h1>'
     + '<p>Type in who turned up and it works out who plays who, fills the courts, runs the match clock and keeps the standings up to date.</p>'
     + '<button type="button" class="hgo" data-c="start">Get started</button></div>'
-    + '<div class="hsteps bal hg" data-bal="220|3,1">' + steps.map(s => '<div class="hstep"><span class="n" aria-hidden="true">' + s[0] + '</span><h3>' + s[1] + '</h3><p>' + s[2] + '</p></div>').join('') + '</div>'
+    + '<div class="hsteps bal hg" data-bal="220|3,1">' + steps.map(s => '<div class="hstep"><span class="n" aria-hidden="true">' + s[0] + '</span><h2>' + s[1] + '</h2><p>' + s[2] + '</p></div>').join('') + '</div>'
     + '<div class="hfoot"><span>Nothing is stored on a server. Everything stays in this browser, and you can download a season file from the Session tab.</span>'
     + '<span>Keyboard shortcuts run the clock, rounds and scoring; change them on the About tab.</span>'
     + '<span style="margin-top:2px">by Keshav</span></div>'
@@ -2828,6 +2891,7 @@ function boot(){
   // The first-paint cover fades once the interface is genuinely up.
   const sp = $('st-splash');
   if(sp){
+    sp.setAttribute('data-up', '1');
     const wait = Math.max(0, 320 - performance.now());
     setTimeout(() => {
       sp.style.pointerEvents = 'none'; sp.style.opacity = '0';

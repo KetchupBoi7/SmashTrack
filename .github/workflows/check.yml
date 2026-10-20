@@ -1,0 +1,46 @@
+name: Check
+
+# Runs on every push and pull request. SmashTrack has no build step, so this
+# checks the things that can silently break a release.
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Required files are present
+        run: |
+          for f in index.html sw.js manifest.webmanifest privacy.html 404.html icon-192.png icon-512.png icon-maskable-512.png apple-touch-icon.png og-image.png LICENSE; do
+            test -f "$f" || { echo "Missing $f"; exit 1; }
+          done
+
+      - name: Scripts parse, and the manifest is valid JSON
+        run: |
+          node -e "
+            const fs = require('fs');
+            const html = fs.readFileSync('index.html', 'utf8');
+            const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+            if (!scripts.length) throw new Error('No inline scripts found in index.html');
+            scripts.forEach((s, i) => { try { new Function(s); } catch (e) { throw new Error('index.html script ' + i + ': ' + e.message); } });
+            new Function(fs.readFileSync('sw.js', 'utf8'));
+            JSON.parse(fs.readFileSync('manifest.webmanifest', 'utf8'));
+            console.log(scripts.length + ' inline scripts, sw.js and the manifest are valid');
+          "
+
+      - name: Nothing points at a dev address, and no secrets
+        run: |
+          if grep -nE "localhost|127\.0\.0\.1|AKIA[0-9A-Z]{12}|sk_(live|test)_|ghp_[A-Za-z0-9]{20}|BEGIN (RSA |EC )?PRIVATE KEY" index.html sw.js manifest.webmanifest privacy.html 404.html; then
+            echo "Found a dev address or something that looks like a secret"; exit 1
+          fi
+
+      - name: Cache version was changed when the app changed
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          if ! git diff --quiet "origin/${{ github.base_ref }}" -- index.html privacy.html && git diff --quiet "origin/${{ github.base_ref }}" -- sw.js; then
+            echo "index.html or privacy.html changed but VERSION in sw.js did not. Visitors would keep the old copy."; exit 1
+          fi
