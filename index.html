@@ -69,6 +69,9 @@
   --bg:#0d1117;--sf:#151c24;--sf2:#1b2530;--sf3:#222e3a;--ln:#2c3a47;
   --ink:#eaf2ee;--mt:#aebbc4;--mt2:#98a6b0;
   --ac:#4A0D67;--ac2:#3a0a52;--acl:#b388d9;--tl:#00A9CC;--tlt:#4cd0ec;--rd:#ff6f61;--am:#ffc24b;
+  /* The soft purple light behind every screen: strongest at the top, gone by mid-page. */
+  --glow:color-mix(in srgb,var(--acl) 20%,transparent);
+  --wash:radial-gradient(ellipse 85% 60% at 50% 0%,var(--glow),transparent 72%);
   --sh:0 10px 30px rgba(0,0,0,.35);
   --dp:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
   --ui:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -93,6 +96,7 @@ html[data-theme=light]{
   /* The teal, red and amber used for text are darkened here so they keep 4.5:1
      contrast on light surfaces. */
   --tl:#006a80;--tlt:#00576b;--rd:#b3261e;--am:#8a5a00;
+  --glow:color-mix(in srgb,var(--acl) 13%,transparent);
   --hero:#0d1117;
   color-scheme:light;
 }
@@ -107,6 +111,7 @@ html,body{margin:0;padding:0}
    underneath is locked so its scrollbar doesn't show beside the layer's. */
 html{overflow-x:hidden}
 html.lock{overflow:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--wash)}
 body{min-height:var(--vh);background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 *{box-sizing:border-box}
 a{color:var(--tl);text-decoration:none}
@@ -155,7 +160,7 @@ main:focus{outline:none}
 .bal.ctr>*{flex-grow:0}
 
 /* ---------- shell ---------- */
-#st-app{min-height:var(--vh);display:flex;flex-direction:column;background:var(--bg)}
+#st-app{min-height:var(--vh);display:flex;flex-direction:column}
 .top{position:sticky;top:0;z-index:60}
 .phone .top{position:relative}
 .saveerr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--rd);color:#1a0705;font-size:13px;font-weight:600;line-height:1.35}
@@ -442,8 +447,8 @@ select.fld{cursor:pointer}
 .num span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mt2);font-weight:600}
 
 /* ---------- scoreboard ---------- */
-.sbv{display:flex;flex-direction:column;flex:1;background:var(--bg);gap:12px}
-.sbv.fs{position:fixed;inset:0;z-index:200;gap:0}
+.sbv{display:flex;flex-direction:column;flex:1;gap:12px}
+.sbv.fs{position:fixed;inset:0;z-index:200;gap:0;background:var(--wash),var(--bg)}
 .sbg{display:grid;grid-template-columns:minmax(0,1fr) clamp(20px,3.5vw,40px) minmax(0,1fr);grid-template-rows:minmax(0,1fr);flex:1;min-height:0;border-radius:12px;overflow:hidden;border:1px solid var(--ln)}
 .sbv.fs .sbg{border-radius:0;margin-bottom:12px}
 /* Each side is a size container, so the score fills the room it has. */

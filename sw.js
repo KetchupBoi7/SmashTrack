@@ -2,7 +2,7 @@
    The whole app is one file, so there is very little to keep: the page, the
    manifest and the two icons. Change VERSION every time you upload a new
    index.html, or browsers that already have the site keep showing the old copy. */
-const VERSION = 'smashtrack-2026-10-20b';
+const VERSION = 'smashtrack-2026-10-20c';
 const SHELL = ['./', './index.html', './privacy.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
