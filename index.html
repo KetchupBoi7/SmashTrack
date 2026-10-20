@@ -50,8 +50,10 @@
   --sh:0 10px 30px rgba(0,0,0,.35);
   --dp:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
   --ui:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
-  /* Controls are 40px with a mouse and 44px on touch screens (below). */
-  --ct:150px;--tt:40px;--r1:8px;--r2:12px;
+  /* Controls are at least 40px with a mouse and 44px on touch screens (--tt0,
+     below). On tall screens they grow a little, up to 10px more, so spare
+     height goes into bigger targets. The top bar stays at the base size. */
+  --ct:150px;--tt0:40px;--tt:clamp(var(--tt0),4.6vh,calc(var(--tt0) + 10px));--r1:8px;--r2:12px;
   /* Every page sits in one centred column: content up to --maxw wide, with
      at least --pad of space on the left and right. --gut is that side space. */
   --maxw:1360px;--pad:clamp(12px,3.2vw,48px);
@@ -62,7 +64,7 @@
   color-scheme:dark;
 }
 @supports (height:100dvh){:root{--vh:100dvh}}
-@media (pointer:coarse){:root{--tt:44px}}
+@media (pointer:coarse){:root{--tt0:44px}}
 html[data-theme=light]{
   --bg:#f0f2f5;--sf:#ffffff;--sf2:#e9ebef;--sf3:#dde0e5;--ln:#cdd2d9;
   --ink:#0d1117;--mt:#48525f;--mt2:#5f6a76;--sh:0 8px 24px rgba(15,20,30,.1);
@@ -72,7 +74,13 @@ html[data-theme=light]{
 
 /* ---------- base ---------- */
 html,body{margin:0;padding:0}
-body{min-height:var(--vh);background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+/* Only the page itself ever scrolls vertically. Clipping sideways overflow on
+   html, not body, keeps body from becoming a second scroller, and while a
+   full-screen layer is up (home screen, fullscreen scoreboard) the page
+   underneath is locked so its scrollbar doesn't show beside the layer's. */
+html{overflow-x:hidden}
+html.lock{overflow:hidden}
+body{min-height:var(--vh);background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 *{box-sizing:border-box}
 a{color:var(--tl);text-decoration:none}
 a:hover{color:var(--ink)}
@@ -129,18 +137,18 @@ input:focus,select:focus{border-color:var(--tl);outline:none;box-shadow:0 0 0 3p
 .wm span{color:var(--acl)}
 .wsub{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mt);margin-top:4px;white-space:nowrap}
 .nav{display:flex;gap:4px;min-width:0}
-.nav button{display:flex;align-items:center;flex:none;white-space:nowrap;background:transparent;color:var(--mt);padding:8px 12px;border-radius:var(--r1);font-weight:600;font-size:13px;border:0;cursor:pointer;min-height:var(--tt)}
+.nav button{display:flex;align-items:center;flex:none;white-space:nowrap;background:transparent;color:var(--mt);padding:8px 12px;border-radius:var(--r1);font-weight:600;font-size:13px;border:0;cursor:pointer;min-height:var(--tt0)}
 .nav button:hover{background:var(--sf2);color:var(--ink)}
 .nav button[aria-current=page]{background:var(--ac);color:#fff}
 .nav button[aria-current=page]:hover{background:var(--ac2)}
 @media (max-width:720px){.nav button{padding:8px 9px}}
 .hright{margin-left:auto;display:flex;align-items:center;gap:10px;flex:none}
-.hpill{border:1px solid var(--ln);border-radius:999px;background:var(--sf2);padding:0 16px;min-height:var(--tt);display:flex;align-items:center;gap:8px;flex:none;font-size:12px;white-space:nowrap}
+.hpill{border:1px solid var(--ln);border-radius:999px;background:var(--sf2);padding:0 16px;min-height:var(--tt0);display:flex;align-items:center;gap:8px;flex:none;font-size:12px;white-space:nowrap}
 .hpill .dot{width:7px;height:7px;border-radius:50%;display:block}
 .hpill b{font-family:var(--dp);font-weight:800;font-size:14px}
 .hpill .m{color:var(--mt)}
 .hpill .sep{width:1px;height:14px;background:var(--ln);display:block}
-.gear{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:none;border:1px solid var(--ln);background:var(--sf2);color:var(--ink);border-radius:999px;min-height:var(--tt);min-width:var(--tt);padding:0 16px;font-size:13px;font-weight:600;cursor:pointer}
+.gear{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:none;border:1px solid var(--ln);background:var(--sf2);color:var(--ink);border-radius:999px;min-height:var(--tt0);min-width:var(--tt0);padding:0 16px;font-size:13px;font-weight:600;cursor:pointer}
 .gear:hover{border-color:var(--mt2)}
 .gear[aria-expanded=true]{border-color:var(--ac);background:var(--ac);color:#fff}
 .gear svg{width:16px;height:16px;flex:none}
@@ -149,7 +157,12 @@ input:focus,select:focus{border-color:var(--tl);outline:none;box-shadow:0 0 0 3p
 .ptop .hpill{padding:0 12px}
 
 main{flex:1;min-width:0;padding:clamp(12px,1.8vw,20px) var(--gut) 24px;width:100%;display:flex;flex-direction:column}
-.view{animation:vIn .4s var(--ez) both;display:flex;flex-direction:column;gap:12px}
+/* Every view fills the height below the top bar. When a page is shorter than
+   the screen, its .grow element takes the spare height: the courts on the
+   dashboard (bigger tap areas), the leaderboard on Stats, the empty state on
+   History. Longer pages just scroll as before. */
+.view{animation:vIn .4s var(--ez) both;display:flex;flex-direction:column;gap:12px;flex:1 0 auto}
+.view>.grow{flex:1 0 auto}
 .vh{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
 .vh h1{font-family:var(--dp);font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:24px;line-height:1.15;margin:0;flex:none}
 .vh p{color:var(--mt);font-size:12px;margin:0;max-width:70ch}
@@ -199,8 +212,10 @@ select.fld{cursor:pointer}
 .tog::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--mt);transition:.18s}
 [aria-checked=true]>.tog{background:var(--ac);border-color:var(--ac)}
 [aria-checked=true]>.tog::after{background:#fff;transform:translateX(20px)}
-.tbox{display:flex;align-items:center;gap:10px;background:var(--sf2);border:1px solid var(--ln);border-radius:var(--r1);cursor:pointer;padding:0 12px;width:100%;min-height:var(--tt);color:var(--mt2);font-size:13px;text-align:left}
-.tbox.lock{cursor:not-allowed}
+.sw{display:inline-flex;align-items:center;justify-content:flex-end;gap:10px;background:none;border:0;padding:0;cursor:pointer;min-height:var(--tt);color:var(--mt2);font-size:13px}
+.sw span:first-child{min-width:24px;text-align:right}
+.sw.lock{cursor:not-allowed}
+.sw.lock .tog{opacity:.55}
 .empty{text-align:center;color:var(--mt);padding:40px 20px;font-size:12px;display:grid;place-content:center}
 .empty b{font-family:var(--dp);font-weight:800;font-size:14px;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
 .alert{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding:12px 14px;border-radius:var(--r2);background:rgba(255,194,75,.1);border:1px solid rgba(255,194,75,.32)}
@@ -246,7 +261,7 @@ select.fld{cursor:pointer}
 .rc .cb{display:flex;flex-direction:column;gap:8px;flex:1}
 .rc .sn{font-family:var(--dp);font-weight:800;font-size:17px;text-transform:uppercase;letter-spacing:.04em;line-height:1.2}
 .rc .sd{color:var(--mt);font-size:12px;margin-top:4px}
-.gen{display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--ac);background:var(--ac);color:#fff;border-radius:var(--r1);padding:14px 16px;font-family:var(--dp);font-weight:800;font-size:18px;text-transform:uppercase;letter-spacing:.05em;line-height:1;cursor:pointer;width:100%;min-height:52px}
+.gen{display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--ac);background:var(--ac);color:#fff;border-radius:var(--r1);padding:14px 16px;font-family:var(--dp);font-weight:800;font-size:18px;text-transform:uppercase;letter-spacing:.05em;line-height:1;cursor:pointer;width:100%;min-height:calc(var(--tt) + 12px)}
 .gen:not(:disabled):hover{background:var(--ac2);transform:translateY(-1px)}
 .gen:disabled{border-color:var(--ln);background:var(--sf3);color:var(--mt2)}
 .rc .gen{margin-top:4px}
@@ -256,7 +271,7 @@ select.fld{cursor:pointer}
 .rgrid .btn.on{border-color:var(--tl);background:var(--tl);color:#04222a}
 .subbar{display:flex;align-items:center;gap:12px;border:1.5px solid var(--tl);color:var(--tl);border-radius:999px;padding:8px 8px 8px 20px;font-size:13px;font-weight:600;line-height:1.4}
 .subbar button{margin-left:auto;flex:none;border:1px solid var(--tl);background:transparent;color:var(--tl);border-radius:999px;padding:8px 16px;font-weight:600;font-size:13px;cursor:pointer;min-height:var(--tt)}
-.courts{container-type:inline-size}
+.courts{container-type:inline-size;align-content:stretch}
 .court{background:linear-gradient(180deg,var(--sf),var(--sf2));border:1px solid var(--ln);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh);display:flex;flex-direction:column;animation:rise .26s var(--ez) both}
 .court.half{border-color:var(--am)}
 .ctop{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--ln);gap:8px;min-height:39px}
@@ -332,11 +347,12 @@ select.fld{cursor:pointer}
 .pill.amb{background:rgba(255,194,75,.14);color:var(--am);border:1px solid rgba(255,194,75,.4)}
 .pill.ok{background:color-mix(in srgb,var(--tl) 12%,transparent);color:var(--tl);border:1px solid color-mix(in srgb,var(--tl) 35%,transparent)}
 .ps{container-type:inline-size}
-/* Adding players is the main job here, so the Add field leads the header. */
-.ps .ch{display:grid;grid-template-columns:auto minmax(170px,260px) auto 1fr minmax(150px,225px) auto auto;grid-template-areas:"h a b . q s t";align-items:center}
+/* Toolbars follow one order across the site: title, then search and sort on
+   the left, a gap, then adding and actions on the right. */
+.ps .ch{display:grid;grid-template-columns:auto minmax(150px,240px) auto 1fr minmax(170px,260px) auto auto;grid-template-areas:"h q s . a b t";align-items:center}
 .ps .ch>h2{grid-area:h}.ps .ch>.q{grid-area:q}.ps .ch>.so{grid-area:s}.ps .ch>.ad{grid-area:a}.ps .ch>.ab{grid-area:b}.ps .ch>.st{grid-area:t}
 .ps .ch .btn{white-space:nowrap}
-@container (max-width:1000px){.ps .ch{grid-template-columns:minmax(0,1fr) minmax(96px,auto);grid-template-areas:"h t" "a b" "q s"}}
+@container (max-width:1000px){.ps .ch{grid-template-columns:minmax(0,1fr) minmax(96px,auto);grid-template-areas:"h t" "q s" "a b"}}
 .selbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--ln);background:var(--sf2)}
 .selbar .n{font-size:12px;color:var(--mt);margin-right:4px}
 .selbar .btn{border-radius:999px;background:var(--sf);padding:8px 14px;font-size:13px}
@@ -360,25 +376,33 @@ select.fld{cursor:pointer}
 .unp.lg span{width:22px;height:22px;font-size:11px}
 .noply{width:100%;color:var(--mt);font-size:13px;text-align:center;padding:8px;min-height:72px;display:grid;place-items:center}
 .g8{--g:8px}.hg{--g:clamp(12px,1.4vw,16px)}
-/* Game settings: one card, five sections, every section the same rhythm. */
-.gs{padding:12px 14px 14px;border-top:1px solid var(--ln)}
-.gset .ch+.gs{border-top:0}
-.gsh{display:flex;align-items:baseline;justify-content:space-between;gap:4px 12px;flex-wrap:wrap;margin-bottom:10px}
-.gsh h3{margin:0;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mt);font-weight:600;line-height:1.4}
-.gsh .eb{color:var(--mt2)}
-.fgrid{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:8px;--cols:1}
-.fl{display:grid;grid-row:span 3;grid-template-rows:subgrid;row-gap:8px;border:1px solid var(--ln);border-radius:var(--r1);padding:12px;min-width:0}
-.fl .lb{align-self:end;line-height:1.35}
-.fl .fc{display:flex;align-items:center;min-width:0}
-@supports not (grid-template-rows:subgrid){.fl{display:flex;flex-direction:column;gap:8px}.fl .lb{margin-bottom:auto}}
 .pc.pa.sel,.pc.pb.sel{background:color-mix(in srgb,var(--ac) 34%,transparent)}
-.stc{display:flex;flex-direction:column;justify-content:center;gap:3px;border:1px solid var(--ln);background:var(--sf2);border-radius:var(--r1);padding:10px 12px;min-height:58px;cursor:pointer;text-align:left;width:100%}
+/* Game settings: a play style bar, then four equal panels of four rows. Every
+   row is name and note on the left, control on the right, so rows, panels and
+   control edges all line up. */
+.gset{container-type:inline-size}
+.sbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:12px 14px;border-bottom:1px solid var(--ln)}
+.stc{display:flex;flex-direction:column;justify-content:center;gap:2px;border:1px solid var(--ln);background:var(--sf2);border-radius:var(--r1);padding:9px 12px;min-height:56px;cursor:pointer;text-align:left;width:100%;min-width:0}
 .stc:hover{border-color:var(--mt2)}
-.stc .n{font-family:var(--dp);font-weight:800;font-size:clamp(13px,1.35vw,17px);text-transform:uppercase;letter-spacing:.03em;line-height:1.1;overflow-wrap:normal;word-break:keep-all;color:var(--mt);display:block}
-.stc .d{font-size:15px;line-height:1.3;color:var(--mt2);display:block}
+.stc .n{font-family:var(--dp);font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.03em;line-height:1.1;color:var(--mt);display:block}
+.stc .d{font-size:12px;line-height:1.3;color:var(--mt2);display:block}
 .stc[aria-pressed=true]{background:var(--ac);border-color:var(--ac)}
 .stc[aria-pressed=true] .n{color:#fff}
 .stc[aria-pressed=true] .d{color:rgba(255,255,255,.75)}
+.gsg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px}
+.gp{display:flex;flex-direction:column;border:1px solid var(--ln);border-radius:var(--r1);min-width:0}
+.gp>header{display:flex;align-items:baseline;justify-content:space-between;gap:4px 8px;flex-wrap:wrap;padding:10px 14px;background:var(--sf2);border-bottom:1px solid var(--ln);border-radius:var(--r1) var(--r1) 0 0}
+.gp>header h3{margin:0;font-family:var(--dp);font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:14px;line-height:1.3}
+.grs{flex:1;display:grid;grid-auto-rows:1fr}
+.gr{display:grid;grid-template-columns:minmax(0,1fr) 180px;align-items:center;gap:14px;padding:10px 14px;min-height:64px}
+.gr+.gr{border-top:1px solid var(--ln)}
+.gr>div:first-child>b{display:block;font-size:13px;font-weight:600}
+.gr .note{margin-top:2px}
+.gr .sw{justify-self:end}
+.gr .seg button{min-height:calc(var(--tt) - 10px);padding:6px 8px}
+@container (max-width:900px){.gsg{grid-template-columns:1fr}}
+@container (max-width:620px){.sbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container (max-width:420px){.gr:not(:has(.sw)){grid-template-columns:1fr;gap:8px}.gr:has(.sw){grid-template-columns:minmax(0,1fr) auto}}
 .rdy{display:flex;flex-direction:column;gap:12px;padding:12px 14px}
 .rdy .alert{border-radius:var(--r1)}
 .nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -421,12 +445,14 @@ select.fld{cursor:pointer}
 .sum b{font-family:var(--dp);font-weight:800;font-size:28px;line-height:1;display:block}
 .sum .k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mt2);margin-top:8px}
 .sum .s{font-size:12px;color:var(--mt);margin-top:4px;line-height:1.4;text-wrap:pretty;overflow-wrap:anywhere}
-.lbh h2{margin-right:auto}
+.lbh{justify-content:flex-start}
+.card.grow>.empty{flex:1}
 .lbh .fld[type=search]{flex:1 1 150px;max-width:240px}
+@media (max-width:560px){.lbh{display:grid;grid-template-columns:minmax(0,1fr) auto}.lbh h2{grid-column:1/-1}.lbh .fld[type=search]{max-width:none}}
 .strk{font-family:var(--dp);font-weight:800;font-size:12px;padding:4px 8px;border-radius:999px}
 
 /* ---------- history ---------- */
-.hctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1 1 320px;min-width:0;justify-content:flex-end}
+.hctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .hctl .fld[type=search]{flex:1 1 170px;max-width:260px}
 .hc{background:var(--sf2);border:1px solid var(--ln);border-radius:var(--r2);overflow:hidden;display:flex;flex-direction:column;transition:transform .2s var(--ez),border-color .2s;content-visibility:auto;contain-intrinsic-size:auto 230px}
 .hc:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--tl) 45%,transparent)}
@@ -533,7 +559,7 @@ select.fld{cursor:pointer}
 .sp-f .btn{font-size:13px;padding:8px 10px}
 
 /* ---------- home ---------- */
-.home{position:fixed;inset:0;z-index:300;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;animation:vIn .35s var(--ez) both}
+.home{position:fixed;inset:0;z-index:300;background:var(--bg);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;animation:vIn .35s var(--ez) both}
 .home-bar{flex:none;background:var(--sf);border-bottom:1px solid var(--ln);position:relative;z-index:2}
 .home-bar .in{padding:10px var(--gut);display:flex;align-items:center;justify-content:space-between;gap:10px clamp(10px,2vw,20px);flex-wrap:wrap;position:relative}
 .home-bar .hr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
@@ -1695,7 +1721,7 @@ function vCourts(){
       + (done && m.hid ? '<button type="button" class="swapc" data-c="courtSwap" data-a="' + esc(m.hid) + '" title="Swap winner" aria-label="Swap the winner for this match">' + SWAPSVG + '</button>' : '')
       + '</span></div>' + body + '</div>';
   });
-  return '<div class="courts bal' + (swap ? ' subon' : '') + '" data-bal="286" data-k="courts">' + cards.join('') + '</div>';
+  return '<div class="courts bal grow' + (swap ? ' subon' : '') + '" data-bal="286" data-k="courts">' + cards.join('') + '</div>';
 }
 function vQueue(){
   const d = D, q = queue(d), swap = !!d.swap, pick = d.swap && d.swap.pick, comp = isComp(d);
@@ -1806,24 +1832,23 @@ function seg(c, cur, opts, lock, cls){
   return '<div class="seg' + (cls ? ' ' + cls : '') + (lock ? ' lock' : '') + '">' + opts.map(o => '<button type="button" data-c="' + c + '" data-a="' + o.v + '"'
     + ' aria-pressed="' + (cur === o.v) + '"' + (lock ? ' aria-disabled="true"' : '') + '>' + o.l + '</button>').join('') + '</div>';
 }
-function tbox(c, a, on, label, lock){
-  return '<button type="button" class="tbox' + (lock ? ' lock' : '') + '" role="switch" aria-checked="' + !!on + '" aria-label="' + label + '" data-c="' + c + '" data-a="' + a + '"'
-    + (lock ? ' aria-disabled="true"' : '') + '><span class="tog"></span><span>' + (on ? 'On' : 'Off') + '</span></button>';
+function sw(c, a, on, label, lock){
+  return '<button type="button" class="sw' + (lock ? ' lock' : '') + '" role="switch" aria-checked="' + !!on + '" aria-label="' + label + '" data-c="' + c + '" data-a="' + a + '"'
+    + (lock ? ' aria-disabled="true"' : '') + '><span>' + (on ? 'On' : 'Off') + '</span><span class="tog"></span></button>';
 }
-// Every game setting is the same tile: label, control, one-line note. The
-// grid uses subgrid rows, so labels, controls and notes line up across a row.
+// Every game setting is the same row: name and note on the left, control on
+// the right in a fixed-width column, so control edges line up down a panel.
 function field(label, control, note){
-  return '<div class="fl"><div class="lb">' + label + '</div><div class="fc">' + control + '</div><div class="note">' + note + '</div></div>';
+  return '<div class="gr"><div><b>' + label + '</b><div class="note">' + note + '</div></div>' + control + '</div>';
 }
-function fgrid(items){ return '<div class="fgrid" data-bal="180|4,2,1">' + items.join('') + '</div>'; }
-function gsec(title, aside, body){
-  return '<section class="gs"><div class="gsh"><h3>' + title + '</h3>' + (aside ? '<span class="eb">' + aside + '</span>' : '') + '</div>' + body + '</section>';
+function gpanel(title, aside, rows){
+  return '<section class="gp"><header><h3>' + title + '</h3>' + (aside ? '<span class="eb">' + aside + '</span>' : '') + '</header><div class="grs">' + rows.join('') + '</div></section>';
 }
 function styleRows(d){
   const s = d.s, st = s.style, locked = !!(d.comp && d.comp.phase !== 'done');
   const step = (k, label, val, note, lock) => field(label, stepper('sStep', val, label.toLowerCase(), lock).replace(/data-c="sStep"/g, 'data-c="sStep" data-a="' + k + '"'), note);
   const sg = (k, label, cur, opts, note, lock) => field(label, seg('sSeg', cur, opts, lock).replace(/data-c="sSeg"/g, 'data-c="sSeg" data-k="' + k + '"'), note);
-  const tg = (k, label, on, note, lock) => field(label, tbox('sTog', k, on, label, lock), note);
+  const tg = (k, label, on, note, lock) => field(label, sw('sTog', k, on, label, lock), note);
   if(st === 'casual') return [
     step('casual.rounds', 'Rounds target', s.casual.rounds, s.casual.rounds ? 'Stops after round ' + s.casual.rounds : '0 = unlimited rounds'),
     step('casual.cap', 'Games cap', s.casual.cap, s.casual.cap ? 'Nobody plays more than ' + s.casual.cap : '0 = no cap per player'),
@@ -1898,11 +1923,11 @@ function vPlayers(){
   });
   const selName = sel.length === 1 ? ((Pl(d, sel[0]) || {}).name || '') : '';
   return '<div class="card ps"><div class="ch"><h2>Playing this session</h2>'
-    + '<input class="fld ad" aria-label="Add player by name" placeholder="Add player" autocomplete="off" value="' + esc(U.nameIn) + '" data-i="nameIn" data-enter="addPlayer">'
-    + '<button type="button" class="btn p s ab" data-c="addPlayer">Add</button>'
     + '<input class="fld q" type="search" aria-label="Search players in this session" placeholder="Search players" value="' + esc(U.fq.p) + '" data-i="fq" data-a="p">'
     + '<select class="fld so" aria-label="Sort the player list" data-i="fs2" data-a="p" data-value="' + U.fs2.p + '">'
     + options(U.fs2.p, [['session','In session first'],['az','A to Z'],['za','Z to A'],['games','Most games'],['wins','Most wins']]) + '</select>'
+    + '<input class="fld ad" aria-label="Add player by name" placeholder="Add player" autocomplete="off" value="' + esc(U.nameIn) + '" data-i="nameIn" data-enter="addPlayer">'
+    + '<button type="button" class="btn p s ab" data-c="addPlayer">Add</button>'
     + '<button type="button" class="btn s st' + (selMode ? ' p' : '') + '" data-c="selTog" aria-pressed="' + selMode + '">' + (selMode ? 'Done' : 'Select') + '</button></div>'
     + (selMode ? '<div class="selbar"><span class="n">' + sel.length + ' selected</span>'
       + '<button type="button" class="btn" data-c="selAll">Select all</button>'
@@ -1922,30 +1947,30 @@ function vPlayers(){
 }
 function vGameSettings(){
   const d = D, s = d.s, o = s.o, st = s.style, locked = !!(d.comp && d.comp.phase !== 'done');
-  const styles = '<div class="fgrid g8" data-bal="130|4,2,1">' + ['casual','kotc','tour','league'].map(k => '<button type="button" class="stc" data-c="style" data-a="' + k + '" aria-pressed="' + (st === k) + '">'
+  const styles = '<div class="sbar" role="group" aria-label="Play style">' + ['casual','kotc','tour','league'].map(k => '<button type="button" class="stc" data-c="style" data-a="' + k + '" aria-pressed="' + (st === k) + '">'
     + '<span class="n">' + ST[k].n + '</span><span class="d">' + CARD_D[k] + '</span></button>').join('') + '</div>';
   return '<div class="card gset"><div class="ch"><h2>Game settings</h2><span class="eb">' + (locked ? 'Matches locked' : 'Saved automatically') + '</span></div>'
-    + gsec('Play style', '', styles)
-    + gsec(ST[st].n + ' rules', '', fgrid(styleRows(d)))
-    + gsec('Format and courts', '', fgrid([
+    + styles + '<div class="gsg">'
+    + gpanel(ST[st].n + ' rules', '', styleRows(d))
+    + gpanel('Format and courts', '', [
       field('Format', seg('fmt', s.fmt, [{l:'Doubles',v:'doubles'},{l:'Singles',v:'singles'}], locked, 'dp'), locked ? 'Locked while a competition runs' : 'Two a side, or one on one'),
       field('Courts', stepper('courts', d.courts.length, 'courts'), 'How many courts are in play'),
-      field('Warn before dropping courts', tbox('opt', 'courtWarn', o.courtWarn, 'Warn before dropping courts'), 'Ask before removing a court that has a match on it'),
-      field('Confirm score corrections', tbox('opt', 'lockScores', o.lockScores, 'Confirm score corrections'), 'Ask before swapping a winner in History')
-    ]))
-    + gsec('Match clock', '', fgrid([
+      field('Warn before dropping courts', sw('opt', 'courtWarn', o.courtWarn, 'Warn before dropping courts'), 'Ask before removing a court with a match on it'),
+      field('Confirm score corrections', sw('opt', 'lockScores', o.lockScores, 'Confirm score corrections'), 'Ask before swapping a winner in History')
+    ])
+    + gpanel('Match clock', '', [
       field('Match length', stepper('len', s.len + 'm', 'match length'), 'How long each match lasts'),
       field('Break between rounds', stepper('brk', fmtBrk(s.brk), 'break'), 'Used when Auto-advance is on'),
-      field('Auto-advance timer', tbox('opt', 'auto', o.auto, 'Auto-advance timer'), 'Generate the next round at zero'),
-      field('Sound alert', tbox('opt', 'sound', o.sound, 'Sound alert'), 'Beep when the clock hits zero')
-    ]))
-    + gsec('Who plays who', isComp(d) ? 'Casual and King of the Court only' : '', fgrid([
-      field('New opponents', tbox('opt', 'newOpp', o.newOpp, 'New opponents'), 'Avoid repeat matchups'),
-      field('Avoid recent partners', tbox('opt', 'noPtn', o.noPtn, 'Avoid recent partners'), 'Don’t repeat doubles teammates'),
-      field('Skill-balanced', tbox('opt', 'skill', o.skill, 'Skill-balanced'), 'Group by win record'),
-      field('Rest priority', tbox('opt', 'rest', o.rest, 'Rest priority'), 'Whoever waited longest gets on first')
-    ]))
-    + '</div>';
+      field('Auto-advance timer', sw('opt', 'auto', o.auto, 'Auto-advance timer'), 'Generate the next round at zero'),
+      field('Sound alert', sw('opt', 'sound', o.sound, 'Sound alert'), 'Beep when the clock hits zero')
+    ])
+    + gpanel('Who plays who', isComp(d) ? 'Casual and King of the Court only' : '', [
+      field('New opponents', sw('opt', 'newOpp', o.newOpp, 'New opponents'), 'Avoid repeat matchups'),
+      field('Avoid recent partners', sw('opt', 'noPtn', o.noPtn, 'Avoid recent partners'), 'Don’t repeat doubles teammates'),
+      field('Skill-balanced', sw('opt', 'skill', o.skill, 'Skill-balanced'), 'Group by win record'),
+      field('Rest priority', sw('opt', 'rest', o.rest, 'Rest priority'), 'Whoever waited longest gets on first')
+    ])
+    + '</div></div>';
 }
 function vReady(){
   const d = D, s = d.s, st = s.style, comp = isComp(d);
@@ -2017,7 +2042,7 @@ function vStats(){
   return '<div class="vh"><h1>Stats</h1><p>Every recorded result feeds this leaderboard automatically.</p>'
     + '<button type="button" class="btn s d" data-c="statsReset">Reset all stats</button></div>'
     + '<div class="bal" data-bal="190|4,2,1">' + cards.map(c => '<div class="sum"><b>' + c[0] + '</b><div class="k">' + c[1] + '</div><div class="s">' + esc(c[2]) + '</div></div>').join('') + '</div>'
-    + '<div class="card" style="overflow:hidden"><div class="ch lbh"><h2>Leaderboard</h2>'
+    + '<div class="card col grow" style="overflow:hidden"><div class="ch lbh"><h2>Leaderboard</h2>'
     + '<input type="search" class="fld" aria-label="Search the leaderboard" placeholder="Search players" value="' + esc(U.fq.s) + '" data-i="fq" data-a="s">'
     + '<select class="fld" aria-label="Sort the leaderboard" data-i="fs2" data-a="s" data-value="' + so + '">'
     + options(so, [['wins','Most wins'],['pct','Win rate'],['games','Most games'],['streak','Streak'],['az','A to Z']]) + '</select></div>'
@@ -2061,13 +2086,13 @@ function vHist(){
     + '<div class="hsd l"><div class="avs">' + h.l.map(av).join('') + '</div><div class="hn">' + esc(h.l.join(' & ')) + '</div><span class="rp l">Lost</span></div></div>'
     + '<div class="hcf"><span>' + (h.fmt === 'doubles' ? 'Doubles' : 'Singles') + ' · ' + esc(h.lbl) + ' · ' + ms(h.dur) + '</span>'
     + '<button type="button" data-c="hswap" data-a="' + esc(h.id) + '">⇆ Swap winner</button></div></div>');
-  return '<div class="vh"><h1>History</h1><p style="flex:1 1 200px;min-width:0">Every match played today. Tap Swap winner if a result went down the wrong way.</p>'
+  return '<div class="vh"><h1>History</h1><p>Every match played today. Tap Swap winner if a result went down the wrong way.</p>'
+    + '<button type="button" class="btn s d" data-c="histClear">Clear history</button></div>'
     + '<div class="hctl"><input type="search" class="fld" aria-label="Search match history" placeholder="Search player, style, court" value="' + esc(U.fq.h) + '" data-i="fq" data-a="h">'
-    + '<select class="fld" aria-label="Sort match history" data-i="fs2" data-a="h" data-value="' + so + '">' + options(so, [['new','Newest first'],['old','Oldest first'],['long','Longest match']]) + '</select>'
-    + '<button type="button" class="btn s d" data-c="histClear">Clear history</button></div></div>'
+    + '<select class="fld" aria-label="Sort match history" data-i="fs2" data-a="h" data-value="' + so + '">' + options(so, [['new','Newest first'],['old','Oldest first'],['long','Longest match']]) + '</select></div>'
     + (cards.length ? '<div class="bal ctr" data-bal="318|fit">' + cards.join('') + '</div>'
       + (more ? '<div class="hmore" id="st-hmore" aria-hidden="true"></div>' : '')
-      : '<div class="empty hempty"><b>' + (d.hist.length ? 'No matches found' : 'No matches yet') + '</b>' + (d.hist.length ? 'Try a different search.' : 'Results appear here the moment you tap a winning side.') + '</div>');
+      : '<div class="empty hempty grow"><b>' + (d.hist.length ? 'No matches found' : 'No matches yet') + '</b>' + (d.hist.length ? 'Try a different search.' : 'Results appear here the moment you tap a winning side.') + '</div>');
 }
 
 /* ---------- about ---------- */
@@ -2240,6 +2265,7 @@ function doRender(){
   rqAll = false; rqParts = new Set();
   const ui = zoomVals(), phone = U.w < 620;
   document.body.classList.toggle('phone', phone);
+  document.documentElement.classList.toggle('lock', !!(U.welcome || U.fs));
   applyVars();
   if(all){
     patch($('st-top'), vTop(ui));
@@ -2349,7 +2375,7 @@ function trapTab(e){
 /* ---------- navigation ---------- */
 function go(v){
   U.settings = false;
-  if(v !== 'score') U.fs = false;
+  if(v !== 'score' && U.fs){ U.fs = false; fsReal(false); }
   if(v === 'hist' && D.v !== 'hist') U.histN = 120;
   if(D.v === v){ render(); return; }
   set(d => { d.v = v; }, null, null, true);
@@ -2367,8 +2393,29 @@ function homeOnLoad(){
 function escape(){
   if(U.cfm) closeDlg();
   else if(U.settings) setU({settings:false, setReturn:true});
-  else if(U.fs) setU({fs:false});
+  else if(U.fs) fsSet(false);
 }
+/* Fullscreen scoreboard. The scoreboard covers the page either way; the
+   browser is also asked to go truly fullscreen, like F11, so its tabs and
+   address bar and the taskbar disappear too. Where the browser refuses (an
+   iPhone, or an embedded frame) the cover alone still works. Leaving the
+   browser's fullscreen by its own means (Escape, F11) ends it here too. */
+function fsEl(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function fsReal(on){
+  const r = document.documentElement;
+  try{
+    let p = null;
+    if(on && !fsEl()){
+      const f = r.requestFullscreen || r.webkitRequestFullscreen;
+      if(f) p = f.call(r);
+    } else if(!on && fsEl()){
+      const x = document.exitFullscreen || document.webkitExitFullscreen;
+      if(x) p = x.call(document);
+    }
+    if(p && p.catch) p.catch(() => {});
+  }catch(e){}
+}
+function fsSet(on){ U.fs = on; fsReal(on); render(); }
 
 /* ---------- clock ---------- */
 function tick(){
@@ -2629,7 +2676,7 @@ const C = {
   sbUndo: el => SB.undoSide(el.dataset.a),
   sbReset: () => SB.reset(),
   sbSwap: () => SB.swap(),
-  fsTog: () => setU({fs:!U.fs}),
+  fsTog: () => fsSet(!U.fs),
   // stats and history
   statsReset: () => ask('Reset all stats?', 'Every played, won, lost and streak count goes back to zero. Players and match history stay exactly as they are.', 'Reset stats',
     () => set(x => x.players.forEach(p => { p.games = 0; p.wins = 0; p.losses = 0; p.streak = 0; p.best = 0; }), 'Stats reset')),
@@ -2726,7 +2773,7 @@ function runAct(id){
   if(id === 'timer'){ timerToggle(); return; }
   if(id === 'round'){ nextRound(); return; }
   // Fullscreen is documented as "fullscreen scoreboard", so take them there too.
-  if(id === 'fs'){ const on = !(U.fs && D.v === 'score'); go('score'); setU({fs:on}); return; }
+  if(id === 'fs'){ const on = !(U.fs && D.v === 'score'); go('score'); fsSet(on); return; }
   const acts = {pta:() => SB.add('a'), ptb:() => SB.add('b'), undo:SB.undo, sbreset:SB.reset, swap:SB.swap, save:downloadSeason};
   if(acts[id]) acts[id]();
 }
@@ -2742,6 +2789,7 @@ function boot(){
     listen:null, kmsg:'', tst:[], cfm:null, preCfm:null, saveErr:null, buzz:null, vk:0, brkSeen:0, histN:120
   };
   window.addEventListener('keydown', onKey);
+  ['fullscreenchange','webkitfullscreenchange'].forEach(t => document.addEventListener(t, () => { if(!fsEl() && U.fs) setU({fs:false}); }));
   window.addEventListener('resize', () => { if(U.w !== window.innerWidth){ U.w = window.innerWidth; render(); } else balance(); });
   // Left attached for the whole session on purpose: a phone suspends the
   // context again every time the screen sleeps.
