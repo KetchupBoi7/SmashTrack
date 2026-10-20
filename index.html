@@ -594,37 +594,78 @@ select.fld{cursor:pointer}
 .sp-f{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sp-f .btn{font-size:13px;padding:8px 10px}
 
-/* ---------- home ---------- */
-.home{position:fixed;inset:0;z-index:300;background:var(--bg);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;animation:vIn .35s var(--ez) both}
-.home-bar{flex:none;background:var(--sf);border-bottom:1px solid var(--ln);position:relative;z-index:2}
-.home-bar .in{padding:10px var(--gut);display:flex;align-items:center;justify-content:space-between;gap:10px clamp(10px,2vw,20px);flex-wrap:wrap;position:relative}
-.home-bar .hr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
+/* ---------- home ----------
+   The landing view: a centred hero (eyebrow, headline, Get started, the three
+   steps and the storage note) over a giant faint SMASHTRACK watermark, then a
+   "What SmashTrack is for" section. The bar and every section share one 1120px
+   column (--hgut), so their edges line up. The home keeps its own colour set;
+   the light theme swaps in readable equivalents. */
+.home{
+  --hgut:max(var(--pad),calc((100% - 1120px) / 2));
+  --h-bg:#0B0D16;--h-ink:#fff;--h-lav:#B79CFF;--h-sub:#C9C5DA;--h-mute:#9692AB;
+  --h-card:#151826;--h-line:rgba(255,255,255,.08);--h-btn:#7C3AED;
+  --h-glow:rgba(124,58,237,.2);--h-wm:rgba(183,156,255,.07);
+  position:fixed;inset:0;z-index:300;background:var(--h-bg);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;animation:vIn .35s var(--ez) both}
+html[data-theme=light] .home{--h-bg:var(--bg);--h-ink:#0d1117;--h-lav:#5b2183;--h-sub:#48525f;--h-mute:#566170;--h-card:#fff;--h-line:rgba(13,17,23,.1);--h-glow:rgba(124,58,237,.12);--h-wm:rgba(91,33,131,.06)}
+.home-bar{position:sticky;top:0;z-index:5;flex:none;background:color-mix(in srgb,var(--h-bg) 86%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--h-line)}
+.home-bar .in{padding:10px var(--hgut);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px clamp(10px,2vw,20px);position:relative}
+.home-bar .wm span{color:var(--h-lav)}
+.home-bar .hr{display:contents}
+.home-bar .nav{flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
 .home-bar .nav button[aria-current]{background:transparent;color:var(--mt)}
-.home-main{position:relative;z-index:0;flex:1;display:flex;flex-direction:column;width:100%}
-.home-glow{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none;user-select:none}
-.home-glow span{position:absolute;top:clamp(-420px,-34vw,-200px);left:50%;transform:translateX(-50%);width:min(1500px,170%);height:clamp(460px,62vw,820px);background:radial-gradient(ellipse 50% 50% at 50% 50%,color-mix(in srgb,var(--acl) 30%,transparent),color-mix(in srgb,var(--acl) 15%,transparent) 34%,color-mix(in srgb,var(--acl) 5%,transparent) 58%,transparent 76%);filter:blur(26px)}
-/* margin:auto centres the block with equal space above and below, and the
-   height-aware spacing lets it fit a 1280x720 projector without scrolling. */
-.home-in{margin:auto;width:100%;max-width:1120px;padding:clamp(16px,3.4vh,44px) clamp(14px,3vw,28px);padding-bottom:max(clamp(16px,3.4vh,44px),env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:clamp(14px,3.2vh,28px)}
-.hhero{display:flex;flex-direction:column;align-items:center;gap:clamp(11px,1.5vw,15px);text-align:center;width:100%;max-width:840px}
-.hbadge{display:inline-flex;align-items:center;border:1px solid color-mix(in srgb,var(--ink) 11%,transparent);background:color-mix(in srgb,var(--sf2) 65%,transparent);border-radius:999px;padding:5px 14px;font-family:var(--dp);font-weight:800;font-size:11px;line-height:1;letter-spacing:.16em;text-transform:uppercase;color:var(--mt)}
-.hbadge span{color:var(--acl)}
-.hhero h1{margin:0;max-width:14em;font-family:var(--dp);font-weight:800;text-transform:uppercase;letter-spacing:.01em;font-size:clamp(29px,min(4.9vw,7.4vh),52px);line-height:1.04;text-wrap:balance;color:var(--hero)}
-.hhero p{margin:0 auto;max-width:46ch;font-size:clamp(13.5px,1.35vw,15px);color:var(--mt);line-height:1.5;text-wrap:balance}
-.hgo{margin-top:clamp(3px,.8vw,7px);display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ac);background:var(--ac);color:#fff;border-radius:999px;padding:0 30px;font-family:var(--dp);font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.08em;line-height:1;cursor:pointer;min-height:46px;transition:.14s;box-shadow:0 0 0 1px color-mix(in srgb,var(--acl) 20%,transparent),0 10px 30px -10px color-mix(in srgb,var(--acl) 55%,transparent)}
-.hgo:not(:disabled):hover{background:var(--ac2);box-shadow:0 0 0 1px color-mix(in srgb,var(--acl) 34%,transparent),0 12px 34px -10px color-mix(in srgb,var(--acl) 72%,transparent);transform:translateY(-1px)}
-.hsteps{width:100%;max-width:920px}
-.hstep{position:relative;background:color-mix(in srgb,var(--sf) 74%,transparent);border:1px solid color-mix(in srgb,var(--ink) 9%,transparent);border-radius:18px;padding:clamp(16px,1.9vw,20px);display:flex;flex-direction:column;align-items:flex-start;gap:9px;text-align:left}
-.hstep .n{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--acl) 14%,transparent);border:1px solid color-mix(in srgb,var(--acl) 32%,transparent);box-shadow:0 0 14px 0 color-mix(in srgb,var(--acl) 26%,transparent);color:var(--acl);font-family:var(--dp);font-weight:800;font-size:12px;line-height:1}
-.hstep h2{margin:0;font-family:var(--dp);font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:15px;line-height:1.15}
-.hstep p{margin:0;font-size:13px;color:var(--mt);line-height:1.5;text-wrap:pretty}
-.hfoot{width:100%;max-width:840px;display:flex;flex-direction:column;align-items:center;gap:5px;padding-top:clamp(13px,1.7vw,17px);border-top:1px solid color-mix(in srgb,var(--ink) 7%,transparent);opacity:.72}
-.hfoot span{font-size:12px;color:var(--mt2);line-height:1.5;text-align:center;text-wrap:balance}
-@media (max-height:680px) and (min-width:620px){
-  .home-in{gap:12px}
-  .hstep{padding:14px 16px;gap:7px}
-  .hfoot{padding-top:10px;gap:3px}
+/* On a phone the nav drops to its own full-width row below the logo and Settings. */
+@media (max-width:760px){
+  .home-bar .nav{order:3;flex-basis:100%;justify-content:center;margin-left:0}
+  .home-bar .gear{margin-left:auto}
 }
+/* Narrow phones: two even rows of three, and the taller bar scrolls away rather than staying pinned. */
+@media (max-width:560px){
+  .home-bar{position:relative}
+  .home-bar .nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px}
+  .home-bar .nav button{justify-content:center}
+}
+.home-main{position:relative;z-index:0;flex:1;width:100%}
+
+/* hero */
+.hhero{position:relative;isolation:isolate;overflow:hidden;min-height:calc(var(--vh) - 64px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(48px,9vh,104px) var(--hgut) clamp(40px,7vh,80px)}
+.hhero::before{content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(ellipse 55% 50% at 50% 42%,var(--h-glow),transparent 70%)}
+.hwm{position:absolute;z-index:-1;left:50%;top:28%;transform:translate(-50%,-50%);font-family:var(--dp);font-weight:800;font-size:max(140px,25vw);line-height:1;letter-spacing:.01em;white-space:nowrap;color:var(--h-wm);pointer-events:none;user-select:none}
+.hey{font-size:12px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--h-lav);margin:0}
+.hhero h1{margin:18px 0 0;max-width:940px;font-family:var(--dp);font-weight:700;text-transform:uppercase;font-size:clamp(40px,5vw,72px);line-height:1;letter-spacing:.01em;color:var(--h-ink)}
+.hlede{margin:24px auto 0;max-width:520px;font-size:18px;line-height:1.6;color:var(--h-sub);text-wrap:pretty}
+.hgo{margin-top:34px;display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 40px;border:0;border-radius:999px;background:var(--h-btn);color:#fff;font-family:var(--dp);font-weight:700;font-size:21px;line-height:1;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 12px 40px rgba(124,58,237,.5);transition:filter .18s var(--ez),box-shadow .18s var(--ez),transform .12s var(--ez)}
+.hgo:not(:disabled):hover{filter:brightness(1.12);box-shadow:0 14px 46px rgba(124,58,237,.62)}
+.hgo:focus-visible{outline:2px solid var(--h-lav);outline-offset:4px}
+.hsteps{list-style:none;margin:clamp(40px,8vh,76px) 0 0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:8px 0;max-width:100%}
+.hsteps li{display:inline-flex;align-items:baseline;gap:8px;white-space:nowrap;font-size:15px;color:var(--h-sub)}
+.hsteps li+li::before{content:"/";content:"/" / "";margin:0 clamp(18px,2.4vw,32px);color:var(--h-mute);opacity:.6}
+.hsteps b{font-family:var(--dp);font-weight:700;font-size:16px;letter-spacing:.04em;color:var(--h-lav)}
+/* Too narrow for one line: the steps stack, without the dividers. */
+@media (max-width:620px){
+  .hsteps{flex-direction:column;align-items:center;gap:8px}
+  .hsteps li+li::before{display:none}
+}
+@media (max-width:420px){.hhero{padding-top:24px}.hhero h1{margin-top:14px}.hgo{margin-top:28px}}
+.hfoot{margin:clamp(48px,10vh,96px) 0 0;display:flex;flex-direction:column;align-items:center;gap:4px;max-width:900px}
+.hfoot span{font-size:13px;line-height:1.55;color:var(--h-mute);text-wrap:pretty}
+
+/* what SmashTrack is for */
+.hfor{padding:clamp(64px,10vh,104px) var(--hgut);border-top:1px solid var(--h-line)}
+.hfor-h{text-align:center;max-width:720px;margin:0 auto clamp(32px,5vh,48px)}
+.hfor-h h2{margin:0;font-family:var(--dp);font-weight:700;text-transform:uppercase;font-size:clamp(32px,3.6vw,48px);line-height:1;letter-spacing:.01em;color:var(--h-ink)}
+.hfor-h p{margin:18px auto 0;max-width:640px;font-size:18px;line-height:1.6;color:var(--h-sub);text-wrap:pretty}
+/* Two or more across: every card matches the tallest, so rows end level. */
+@media (min-width:520px){
+  .hfor .bal{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));grid-auto-rows:auto 1fr}
+  /* Titles share a row track, so every card's text starts on the same line. */
+  .hfor .hfc{display:grid;grid-row:span 2;grid-template-rows:subgrid;row-gap:10px;align-content:start}
+}
+.hfc{background:var(--h-card);border:1px solid var(--h-line);border-radius:24px;padding:28px 26px;display:flex;flex-direction:column;gap:10px;text-align:left}
+.hfc h3{margin:0;font-family:var(--dp);font-weight:700;text-transform:uppercase;font-size:21px;line-height:1.1;letter-spacing:.03em;color:var(--h-ink)}
+.hfc p{margin:0;font-size:15px;line-height:1.6;color:var(--h-sub);text-wrap:pretty}
+.hfor-end{margin:clamp(32px,5vh,44px) auto 0;max-width:720px;text-align:center;font-size:15px;line-height:1.6;color:var(--h-mute);padding-bottom:env(safe-area-inset-bottom)}
+.hfor-end a{color:var(--h-lav);text-decoration:underline;text-underline-offset:3px;display:inline-block;padding:10px 4px;margin:-10px 0}
+.hfor-end a:focus-visible{outline:2px solid var(--h-lav);outline-offset:2px;border-radius:4px}
 
 /* ---------- first-paint splash ---------- */
 #st-splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;background:#0d1117;transition:opacity .38s ease}
@@ -2193,29 +2234,40 @@ function vAbout(){
 }
 
 /* ---------- home screen ---------- */
+// What the app is for, written from what it actually does (play styles,
+// competitions, the dashboard and the records it keeps).
+const HOME_FOR = [
+  ['Fair games on a busy night', 'Casual rotation picks who plays next from the queue, gives priority to whoever has waited longest and steers away from repeat opponents and partners. King of the Court keeps winners on, with a win cap so everyone gets a turn.'],
+  ['Tournaments and leagues', 'Run a knockout with seeding, byes, a third-place playoff and an optional consolation bracket, or a round-robin league in one or two pools with a top-two or top-four final.'],
+  ['The whole floor on one screen', 'Generate fills every court, the match clock buzzes at zero and can start the next round on its own, and one tap on the winning side records the result. Sub players mid-round or swap a result that went down wrong.'],
+  ['Results that add up', 'A leaderboard of wins, win rate and streaks, a searchable match history, live league standings and a tournament bracket, plus a full-screen scoreboard for point-by-point games.']
+];
 function vHome(ui){
   const z = ui.zoom ? ' style="zoom:' + ui.zoom + '"' : '';
-  const steps = [
-    ['1','Add the players','Type in everyone who turned up.'],
-    ['2','Pick a play style','Casual, King of the Court, or a competition.'],
-    ['3','Play and score','Generate a round, then tap the side that won.']
-  ];
+  const steps = [['01','Add the players'],['02','Pick a play style'],['03','Play and score']];
   return '<div class="home" role="dialog" aria-modal="true" aria-label="SmashTrack home screen" data-key="home">'
-    + '<div class="home-bar"' + z + '><div class="in"><div>' + brand(true) + '</div>'
-    + '<div class="hr">' + (U.w >= 620 ? '<nav class="nav" aria-label="Sections">' + navBtns(true) + '</nav>' : '') + gearBtn(U.w < 1000) + '</div>'
+    + '<div class="home-bar"' + z + '><div class="in"><div>' + brand(false) + '</div>'
+    + '<div class="hr"><nav class="nav" aria-label="Sections">' + navBtns(true) + '</nav>'
+    + '<button type="button" class="gear" data-c="setTog" aria-haspopup="dialog" aria-expanded="' + !!U.settings + '">Settings</button></div>'
     + vSettings() + '</div></div>'
-    + '<div class="home-main"' + z + '><span class="home-glow" aria-hidden="true"><span></span></span><div class="home-in">'
-    + '<div class="hhero"><span class="hbadge">SMASH<span>TRACK</span></span>'
-    + '<h1>Run badminton, table tennis and squash sessions from one screen</h1>'
-    + '<p>Type in who turned up and it works out who plays who, fills the courts, runs the match clock and keeps the standings up to date.</p>'
-    + '<button type="button" class="hgo" data-c="start">Get started</button></div>'
-    + '<div class="hsteps bal hg" data-bal="220|3,1">' + steps.map(s => '<div class="hstep"><span class="n" aria-hidden="true">' + s[0] + '</span><h2>' + s[1] + '</h2><p>' + s[2] + '</p></div>').join('') + '</div>'
+    + '<div class="home-main"' + z + '>'
+    + '<section class="hhero" aria-labelledby="st-h1"><span class="hwm" aria-hidden="true">SMASHTRACK</span>'
+    + '<p class="hey">Tournament Coordinator</p>'
+    + '<h1 id="st-h1">Run badminton, table tennis and squash sessions from one screen</h1>'
+    + '<p class="hlede">Type in who turned up and it works out who plays who, fills the courts, runs the match clock and keeps the standings up to date.</p>'
+    + '<button type="button" class="hgo" data-c="start">Get started</button>'
+    + '<ol class="hsteps" aria-label="How it works">' + steps.map(s => '<li><b>' + s[0] + '</b>' + s[1] + '</li>').join('') + '</ol>'
     + '<div class="hfoot"><span>Nothing is stored on a server. Everything stays in this browser, and you can download a season file from the Session tab.</span>'
     + '<span>Keyboard shortcuts run the clock, rounds and scoring; change them on the About tab.</span>'
-    + '<span style="margin-top:2px">by Keshav</span></div>'
-    + '</div></div></div>';
+    + '<span>by Keshav</span></div>'
+    + '</section>'
+    + '<section class="hfor" aria-labelledby="st-for-h"><div class="hfor-h"><h2 id="st-for-h">What SmashTrack is for</h2>'
+    + '<p>Running a club or school session means deciding who plays who, keeping every court busy, timing matches and remembering who won. SmashTrack does that bookkeeping, for casual nights and for competitions.</p></div>'
+    + '<div class="bal" data-bal="240|4,2,1" style="--g:16px">' + HOME_FOR.map(c => '<div class="hfc"><h3>' + c[0] + '</h3><p>' + c[1] + '</p></div>').join('') + '</div>'
+    + '<p class="hfor-end">Everything runs in this browser, with no account and no server. Download a season file from the Session tab to keep a copy or carry on from another computer. <a href="privacy.html">Privacy and terms</a></p>'
+    + '</section>'
+    + '</div></div>';
 }
-
 /* ---------- dialog, toasts ---------- */
 function vDlg(){
   const c = U.cfm; if(!c) return '';
@@ -2666,7 +2718,9 @@ const C = {
   go: el => go(el.dataset.a),
   land: el => { dismissHome(); go(el.dataset.a); },
   // Always lands on the dashboard, whatever view was last open.
-  start: () => { dismissHome(); go('dash'); },
+  // A first visit starts where players are added; anyone with players already
+  // goes straight to the courts.
+  start: () => { dismissHome(); go(D.players.length ? 'dash' : 'sess'); },
   home: () => setU({welcome:true, settings:false}),
   setTog: (el, e) => setU({settings:!U.settings, setKbd:e.detail === 0}),
   setGo: el => { if(U.welcome) dismissHome(); go(el.dataset.a); },

@@ -17,7 +17,6 @@ Live site: https://ketchupboi7.github.io/SmashTrack/
 | `og-image.png` | The preview picture shown when the link is shared |
 | `privacy.html` | Privacy and terms, linked from the About page |
 | `404.html` | The page GitHub Pages shows for an address that does not exist |
-| `robots.txt`, `sitemap.xml` | For search engines (they only take effect on a custom domain) |
 | `LICENSE`, `NOTICE.md` | The licence, and the licences of the built-in fonts |
 | `.github/workflows/check.yml` | A check that runs on every push |
 
@@ -30,7 +29,7 @@ There is no build step, no server and no accounts. `index.html` also works on it
 3. On the same page, tick **Enforce HTTPS**.
 4. Wait a minute or two. The site appears at `https://<your-username>.github.io/<repository-name>/`.
 
-The address is written into `index.html` (the `canonical` and `og:` tags), `privacy.html`, `404.html`, `robots.txt` and `sitemap.xml`. If the site moves to a different address, such as a custom domain, search for `ketchupboi7.github.io/SmashTrack` and replace it in those files.
+The address is written into `index.html` (the `canonical` and `og:` tags), `privacy.html`, `404.html`. If the site moves to a different address, such as a custom domain, search for `ketchupboi7.github.io/SmashTrack` and replace it in those files. If you move to a custom domain, also add a `robots.txt` and `sitemap.xml` at its root.
 
 ## Uploading a new version
 
